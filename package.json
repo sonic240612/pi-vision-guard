@@ -1,0 +1,32 @@
+{
+  "name": "pi-vision-guard",
+  "version": "0.1.0",
+  "description": "Pi extension guarding local LLMs from CPU-starving headless Chrome SwiftShader flags, hanging screenshot + CDP port combos, and orphaned browser processes on Windows",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "chrome",
+    "headless",
+    "webgl",
+    "windows",
+    "vision",
+    "local-llm"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "node --test test/"
+  },
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^1.6.0",
+    "@types/node": "^26.1.0",
+    "typescript": "^5.9.0"
+  }
+}
