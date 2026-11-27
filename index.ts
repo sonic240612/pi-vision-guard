@@ -18,6 +18,7 @@ export default function piVisionGuardExtension(pi: ExtensionAPI): void {
   let currentCwd = process.cwd();
   let rewriteCount = 0;
   let sweptCount = 0;
+  let removedProfilesCount = 0;
   let warnedVisionInput = false;
 
   function recordTargets(text: string): void {
@@ -48,6 +49,7 @@ export default function piVisionGuardExtension(pi: ExtensionAPI): void {
         `pi-vision-guard active (${process.platform})`,
         `- rewrites: ${rewriteCount}`,
         `- orphaned Chrome PIDs swept: ${sweptCount}`,
+        `- disposable Chrome profiles removed: ${removedProfilesCount}`,
         `- active model: ${model ? `${model.provider}/${model.id} (input=${JSON.stringify(model.input)}, vision=${supportsImage})` : "none"}`,
         `- log: ${logPath ?? "disabled"}`,
       ].join("\n");
@@ -139,6 +141,7 @@ export default function piVisionGuardExtension(pi: ExtensionAPI): void {
       logPath,
     });
     sweptCount += res.killedPids.length;
+    removedProfilesCount += res.removedProfiles.length;
   });
 
   pi.on("session_shutdown", async (_event, ctx) => {
@@ -150,5 +153,6 @@ export default function piVisionGuardExtension(pi: ExtensionAPI): void {
       logPath,
     });
     sweptCount += res.killedPids.length;
+    removedProfilesCount += res.removedProfiles.length;
   });
 }

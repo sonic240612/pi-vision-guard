@@ -44,7 +44,9 @@ In live local verification against Strata (`Qwen3.8-Flash-Next IQ3_S`):
   - Strips `--remote-debugging-port=...` when paired with `--screenshot=...`.
   - Replaces Chrome-targeted `pkill -f` on Windows with a PowerShell `-EncodedCommand` `Stop-Process` call scoped to headless debugging Chrome processes.
   - Rewrites Chrome flags inside code/script files (`.js`, `.mjs`, `.ts`, `.py`, `.sh`, `.ps1`, etc.) created/edited via `write`/`edit`, while leaving documentation (`.md`, `.txt`, `.json`) untouched.
-- **Orphan sweep (`agent_end` & `session_shutdown`)**: Terminates leftover `--headless` `chrome.exe` processes strictly scoped to the session's tracked debugging ports, profile directories, or working directory (passing paths via environment variables to avoid PowerShell quoting injection), without touching interactive desktop Chrome or unrelated browser tools.
+- **Orphan & temp-profile sweep (`agent_end` & `session_shutdown`)**:
+  - Terminates leftover `--headless` `chrome.exe` processes strictly scoped to the session's tracked debugging ports, profile directories, or working directory (passing paths via environment variables to avoid PowerShell quoting injection), without touching interactive desktop Chrome or unrelated browser tools.
+  - Safely removes unused disposable headless Chrome `--user-data-dir` folders (`.cp<port>`, `.chrome-profile-*`, `.chr*` containing Chrome `Local State` / `Default` signatures) after Chrome exits, preventing multi-gigabyte disk bloat across long runs while skipping active or custom persistent profiles.
 - **Status & vision check (`/vision-guard`)**: Displays active platform, rewrite count, swept PIDs, log path, and warns when a local provider in `models.json` lacks `"image"` in `"input"`.
 
 ## Installation
@@ -82,6 +84,7 @@ Without `"image"`, Pi's `read` tool flags the model as text-only and strips the 
 
 - Log file defaults to `~/.pi/agent/logs/pi-vision-guard.log` (keeps project repositories free of untracked log files).
 - Override via `PI_VISION_GUARD_LOG=/path/to/file.log`, or disable with `PI_VISION_GUARD_LOG=off`.
+- Set `PI_VISION_GUARD_KEEP_PROFILES=1` to keep disposable headless Chrome profile directories (`.cp*`, `.chrome-profile-*`) for manual inspection.
 
 ## Development
 

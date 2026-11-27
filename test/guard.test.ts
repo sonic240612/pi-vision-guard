@@ -1,11 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import {
   extractChromeTargets,
   isScriptFilePath,
   sanitizeScriptText,
   sanitizeShellChromeCommand,
 } from "../src/guard.ts";
+import {
+  isDisposableChromeProfileDir,
+  sweepDisposableChromeProfiles,
+} from "../src/cleanup.ts";
 
 test("rewrites SwiftShader and --disable-gpu on Windows bash Chrome command", () => {
   const input =
@@ -83,4 +90,44 @@ test("extracts debugging ports and user-data-dir paths", () => {
   );
   assert.deepEqual(targets.ports, ["9333"]);
   assert.deepEqual(targets.dirs, ["C:/temp/app/.chr"]);
+});
+
+test("sweeps unused disposable Chrome profile folders without touching active or non-Chrome dirs", () => {
+  const tmpWork = fs.mkdtempSync(path.join(os.tmpdir(), "pi-vg-test-"));
+  try {
+    const stale1 = path.join(tmpWork, ".cp9353");
+    const stale2 = path.join(tmpWork, ".chrome-profile-9351");
+    const active = path.join(tmpWork, ".cp9426");
+    const customDir = path.join(tmpWork, "my-login-profile");
+    const nonChromeDot = path.join(tmpWork, ".chr-notes");
+
+    for (const d of [stale1, stale2, active, customDir, nonChromeDot]) {
+      fs.mkdirSync(d, { recursive: true });
+    }
+    fs.writeFileSync(path.join(stale1, "Local State"), "{}");
+    fs.mkdirSync(path.join(stale2, "Default"));
+    fs.writeFileSync(path.join(active, "Local State"), "{}");
+    fs.writeFileSync(path.join(customDir, "Local State"), "{}");
+    fs.writeFileSync(path.join(nonChromeDot, "readme.txt"), "not chrome");
+
+    assert.equal(isDisposableChromeProfileDir(stale1), true);
+    assert.equal(isDisposableChromeProfileDir(customDir), false);
+    assert.equal(isDisposableChromeProfileDir(nonChromeDot), false);
+
+    const activeNorm = active.replace(/\\/g, "/");
+    const removed = sweepDisposableChromeProfiles({
+      cwd: tmpWork,
+      trackedDirs: new Set<string>(),
+      activeChromeCmds: [`"C:/Program Files/Google/Chrome/Application/chrome.exe" --user-data-dir=${activeNorm}`],
+    });
+
+    assert.deepEqual(removed.sort(), [".chrome-profile-9351", ".cp9353"]);
+    assert.equal(fs.existsSync(stale1), false);
+    assert.equal(fs.existsSync(stale2), false);
+    assert.equal(fs.existsSync(active), true);
+    assert.equal(fs.existsSync(customDir), true);
+    assert.equal(fs.existsSync(nonChromeDot), true);
+  } finally {
+    fs.rmSync(tmpWork, { recursive: true, force: true });
+  }
 });
