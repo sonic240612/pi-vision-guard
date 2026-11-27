@@ -37,7 +37,6 @@ export const WINDOWS_CHROME_SYSTEM_HINT = [
   "## Browser / Screenshot Rules (pi-vision-guard)",
   "- When running headless Chrome/Chromium on Windows for screenshots or WebGL inspection, ALWAYS pass `--headless=new --use-gl=angle --use-angle=d3d11 --ignore-gpu-blocklist` (NEVER `--disable-gpu`, `--use-angle=swiftshader`, or `--enable-unsafe-swiftshader`).",
   "- Do NOT combine `--screenshot=...` with `--remote-debugging-port=...` on one Chrome invocation (that keeps headless Chrome open until timeout). Use either one-shot `--screenshot=...` alone, or CDP with explicit `Browser.close`.",
-  "- Do NOT create numbered per-run `--user-data-dir` folders inside the workspace (such as `.cp9350` or `.chrome-profile-*`). Reuse ONE folder under OS temp (e.g. `$env:TEMP\\pi-chrome-profile`) or delete the temp profile right after Chrome exits.",
   "- On Windows, do NOT use `pkill -f` to stop `chrome.exe` or local Python servers (Git Bash `pkill` skips native Windows processes). Kill exact PIDs with `Stop-Process` or `taskkill`.",
 ].join("\n");
 
